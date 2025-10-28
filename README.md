@@ -1,4 +1,4 @@
-# Pollution Tracker back-end
+# Pollution Tracker front-end
 WIP.
 
 ## Installation
