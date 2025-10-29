@@ -26,8 +26,7 @@ const PollutionPlotsDashboard = () => {
     
     try {
       // BACKEND API CALL:
-      // const response = await fetch(`http://localhost:3000/sensors/${sensorId}/readings?range=${timeRange}`);
-      const response = await fetch(`http://127.0.0.1:3000/sensors/${sensorId}/readings`);  
+      const response = await fetch(`http://localhost:3000/sensors/${sensorId}/readings?range=${timeRange}`);
       if (!response.ok) throw new Error('Failed to fetch readings');
       const data = await response.json();
       setSensorReadings(data);
