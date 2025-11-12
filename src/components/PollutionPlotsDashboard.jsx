@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Thermometer, Wind, Calendar, RefreshCw, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
+import { Thermometer, Wind, Calendar, RefreshCw, AlertCircle, CheckCircle, TrendingUp, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const PollutionPlotsDashboard = () => {
+  const { user, logout, token } = useAuth();
   const [selectedSensor, setSelectedSensor] = useState(1);
   const [sensorReadings, setSensorReadings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,7 +16,7 @@ const PollutionPlotsDashboard = () => {
   // Available sensors - In real app, fetch from backend
   const sensors = [
     { id: 1, name: 'Petroquimica Tarragona', location: 'Fumera 1' },
-    // { id: 2, name: 'Factory Chimney B', location: 'South Zone' },
+    { id: 2, name: 'Central Nuclear Vandellos II', location: 'Nucli 1' },
     // { id: 3, name: 'Power Plant Stack', location: 'East Zone' },
     // { id: 4, name: 'Incinerator Unit', location: 'West Zone' }
   ];
@@ -26,10 +28,45 @@ const PollutionPlotsDashboard = () => {
     
     try {
       // BACKEND API CALL:
-      const response = await fetch(`http://localhost:3000/sensors/${sensorId}/readings?range=${timeRange}`);
-      if (!response.ok) throw new Error('Failed to fetch readings');
+      const response = await fetch(`http://localhost:3000/sensors/${sensorId}/readings?range=${timeRange}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
       const data = await response.json();
-      setSensorReadings(data);
+
+      switch (response.status) {
+        case 200:
+          // Success
+          setSensorReadings(data.body);
+          break;
+
+        case 401:
+          // Unauthorized - token expired or invalid
+          setError('Session expired. Please log in again.');
+          setTimeout(() => logout(), 2000);
+          break;
+
+        case 403:
+          // Forbidden - user doesn't own this resource
+          setError(data.error_msg || 'You do not have permission to access this resource');
+          break;
+
+        case 409:
+          // Conflicts - resource already exists
+          setError(data.error_msg || 'Resource already exists');
+          break;
+
+        case 500:
+          // Server error
+          setError(data.error_msg || 'Server error. Please try again later.');
+          break;
+
+        default:
+          setError(`Error: ${response.status} - ${data.error_msg || 'Unknown error'}`);
+      }
       
     } catch (err) {
       setError(err.message);
@@ -86,10 +123,21 @@ const PollutionPlotsDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">My Plots</h1>
-          <p className="text-slate-600">Monitor pollution levels from your sensors in real-time</p>
+        {/* Header with Logout */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">My Plots</h1>
+            <p className="text-slate-600">
+              Welcome, <span className="font-semibold">{user?.username}</span> - Monitor pollution levels from your sensors
+            </p>
+          </div>
+          <button
+            onClick={logout}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
         </div>
 
         {/* Controls */}
