@@ -5,7 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PollutionPlotsDashboard = () => {
   const { user, logout, token } = useAuth();
-  const [selectedSensor, setSelectedSensor] = useState(1);
+  const [selectedSensor, setSelectedSensor] = useState(null);
+  const [sensors, setSensors] = useState([]); // ← Start empty
+  const [sensorsLoading, setSensorsLoading] = useState(true);
   const [sensorReadings, setSensorReadings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -13,13 +15,65 @@ const PollutionPlotsDashboard = () => {
   const [showCO2, setShowCO2] = useState(true);
   const [showTemp, setShowTemp] = useState(true);
 
-  // Available sensors - In real app, fetch from backend
-  const sensors = [
-    { id: 1, name: 'Petroquimica Tarragona', location: 'Fumera 1' },
-    { id: 2, name: 'Central Nuclear Vandellos II', location: 'Nucli 1' },
-    // { id: 3, name: 'Power Plant Stack', location: 'East Zone' },
-    // { id: 4, name: 'Incinerator Unit', location: 'West Zone' }
-  ];
+  // Fetch user's sensors on mount
+  useEffect(() => {
+    const fetchUserSensors = async () => {
+      setSensorsLoading(true);
+      setError(null);
+      
+      try {
+        // BACKEND API CALL:
+        const response = await fetch('http://localhost:3000/sensors', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        switch (response.status) {
+          case 200:
+            // Success
+            //if (response.ok && data.body && Array.isArray(data.body)) {
+            setSensors(data.body);
+
+            // Auto-select first sensor
+            if (data.body.length > 0) {
+              setSelectedSensor(data.body[0].id);
+            }
+            break;
+
+          case 401:
+            // Unauthorized - token expired or invalid
+            setError('Session expired. Please log in again.');
+            setTimeout(() => logout(), 2000);
+            break;
+
+          case 500:
+            // Server error
+            setError(data.error_msg || 'Server error. Please try again later.');
+            break;
+
+          default:
+            setError(`Error: ${response.status} - ${data.error_msg || 'Unknown error'}`);
+        }
+      
+      } catch (err) {
+        console.error('Error fetching sensors:', err);
+      } finally {
+        setSensorsLoading(false);
+      }
+    };
+
+    fetchUserSensors();
+  }, [token, logout]);
+
+  // Fetch readings when sensor or time range changes
+  useEffect(() => {
+    if (selectedSensor) {
+      fetchSensorReadings(selectedSensor);
+    }
+  }, [selectedSensor, timeRange]);
 
   // Fetch sensor readings from backend
   const fetchSensorReadings = async (sensorId) => {
@@ -78,6 +132,45 @@ const PollutionPlotsDashboard = () => {
   useEffect(() => {
     fetchSensorReadings(selectedSensor);
   }, [selectedSensor, timeRange]);
+
+  if (sensorsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-spin" />
+          <h3 className="text-xl font-semibold text-slate-800 mb-2">Loading Your Sensors</h3>
+          <p className="text-slate-600">Please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (sensors.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md text-center">
+          <Wind className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">No Sensors Found</h2>
+          <p className="text-slate-600 mb-6">
+            You don't have any pollution sensors registered yet.
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800 text-left mb-6">
+            <p className="font-semibold mb-2">📝 To get started:</p>
+            <ul className="space-y-1 ml-4">
+              <li>• Contact your administrator to register sensors</li>
+              <li>• Sensors will appear here once assigned to your account</li>
+            </ul>
+          </div>
+          <button 
+            onClick={logout}
+            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Format data for charts
   const chartData = sensorReadings.map(reading => ({
