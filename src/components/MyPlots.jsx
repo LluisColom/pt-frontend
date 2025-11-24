@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
 import { Thermometer, Wind, Calendar, RefreshCw, AlertCircle, CheckCircle, TrendingUp, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -373,6 +373,7 @@ const PollutionPlotsDashboard = () => {
                       name="CO₂"
                       activeDot={{ r: 5 }}
                     />
+                    <Brush dataKey="timestamp" height={30} stroke="#3b82f6" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -415,6 +416,7 @@ const PollutionPlotsDashboard = () => {
                       name="Temperature"
                       activeDot={{ r: 5 }}
                     />
+                    <Brush dataKey="timestamp" height={30} stroke="#f97316" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
