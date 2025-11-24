@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader, AlertCircle, ExternalLink, Shield, CheckCircle, MapPin, Calendar, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader, AlertCircle, ExternalLink, Shield, CheckCircle, XCircle, MapPin, Calendar, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const MySensorsPage = () => {
@@ -9,6 +9,7 @@ const MySensorsPage = () => {
   const [readings, setSensorReadings] = useState([]);
   const [sensorsLoading, setSensorsLoading] = useState(true);
   const [readingsLoading, setReadingsLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState(null);
   
   // Pagination state
@@ -113,6 +114,97 @@ const MySensorsPage = () => {
     }
   };
 
+  const verifyAllReadings = async () => {
+    setVerifying(true);
+    setError(null);
+
+    // Reset verification status for current page to "On Chain" (undefined)
+    setSensorReadings(prevReadings => 
+    prevReadings.map(r => {
+      const isOnCurrentPage = currentReadings.some(cr => cr.id === r.id);
+      return isOnCurrentPage && r.tx_signature 
+        ? { ...r, verified: undefined } // Reset to "On Chain"
+        : r;
+    })
+  );
+  
+  // Small delay to show the reset
+  await new Promise(resolve => setTimeout(resolve, 100));
+    
+    try {
+      // Only verify readings on the CURRENT PAGE
+      for (const reading of currentReadings) {
+        if (!reading.tx_signature) continue;
+        
+        try {
+          const response = await fetch(`http://localhost:3000/verify/${reading.id}`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          
+          const data = await response.json();
+
+          switch (response.status) {
+            case 200:
+              setSensorReadings(prevReadings => 
+                prevReadings.map(r => 
+                  r.id === reading.id 
+                    ? { ...r, verified: data.body.verification }
+                    : r
+                )
+              );
+              break;
+
+            case 401:
+              setError('Session expired. Please log in again.');
+              setTimeout(() => logout(), 2000);
+              return; // Stop verification
+
+            case 404:
+              console.warn(`Reading ${reading.id} not found`);
+              setSensorReadings(prevReadings => 
+                prevReadings.map(r => 
+                  r.id === reading.id ? { ...r, verified: false } : r
+                )
+              );
+              break;
+
+            case 500:
+              console.error(`Server error verifying reading ${reading.id}`);
+              setSensorReadings(prevReadings => 
+                prevReadings.map(r => 
+                  r.id === reading.id ? { ...r, verified: false } : r
+                )
+              );
+              break;
+
+            default:
+              console.error(`Unexpected error (${response.status}) verifying reading ${reading.id}`);
+              setSensorReadings(prevReadings => 
+                prevReadings.map(r => 
+                  r.id === reading.id ? { ...r, verified: false } : r
+                )
+              );
+          }
+        } catch (err) {
+          console.error(`Verification failed for reading ${reading.id}:`, err);
+          setSensorReadings(prevReadings => 
+            prevReadings.map(r => 
+              r.id === reading.id ? { ...r, verified: false } : r
+            )
+          );
+        }
+        
+        // Small delay between each request
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    } catch (err) {
+      setError('Verification failed: ' + err.message);
+    } finally {
+      setVerifying(false);
+    }
+};
+
   // Pagination logic
   const totalPages = Math.ceil(readings.length / readingsPerPage);
   const indexOfLastReading = currentPage * readingsPerPage;
@@ -131,7 +223,6 @@ const MySensorsPage = () => {
     setCurrentPage(pageNumber);
   };
 
-  // Get current sensor object
   const currentSensor = sensors.find(s => s.id === selectedSensor);
 
   if (sensorsLoading) {
@@ -161,7 +252,6 @@ const MySensorsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-800 mb-2">My Sensors</h1>
           <p className="text-slate-600">View and manage your pollution monitoring sensors</p>
@@ -169,7 +259,6 @@ const MySensorsPage = () => {
 
         <div className="grid lg:grid-cols-3 gap-6">
           
-          {/* Sensors List (Left Sidebar) */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -198,13 +287,34 @@ const MySensorsPage = () => {
             </div>
           </div>
 
-          {/* Readings Table (Main Content) */}
           <div className="lg:col-span-2">
             {currentSensor && (
               <div className="bg-white rounded-lg shadow-md">
-                {/* Sensor Info Header */}
                 <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">{currentSensor.name}</h2>
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-2xl font-bold text-slate-800">{currentSensor.name}</h2>
+                    
+                    {readings.length > 0 && (
+                      <button
+                        onClick={verifyAllReadings}
+                        disabled={verifying}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {verifying ? (
+                          <>
+                            <Loader className="w-4 h-4 animate-spin" />
+                            Verifying Page...
+                          </>
+                        ) : (
+                          <>
+                            <Shield className="w-4 h-4" />
+                            Verify Page
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                  
                   <div className="flex items-center gap-4 text-sm text-slate-600">
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
@@ -217,7 +327,6 @@ const MySensorsPage = () => {
                   </div>
                 </div>
 
-                {/* Error Display */}
                 {error && (
                   <div className="m-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -225,7 +334,6 @@ const MySensorsPage = () => {
                   </div>
                 )}
 
-                {/* Loading State */}
                 {readingsLoading && (
                   <div className="p-12 text-center">
                     <Loader className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-spin" />
@@ -233,7 +341,6 @@ const MySensorsPage = () => {
                   </div>
                 )}
 
-                {/* Readings Table */}
                 {!readingsLoading && !error && readings.length > 0 && (
                   <>
                     <div className="overflow-x-auto">
@@ -262,7 +369,6 @@ const MySensorsPage = () => {
                       </table>
                     </div>
 
-                    {/* Pagination Controls */}
                     {totalPages > 1 && (
                       <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
                         <div className="text-sm text-slate-600">
@@ -277,11 +383,9 @@ const MySensorsPage = () => {
                             <ChevronLeft className="w-5 h-5" />
                           </button>
                           
-                          {/* Page Numbers */}
                           <div className="flex gap-1">
                             {[...Array(totalPages)].map((_, index) => {
                               const pageNum = index + 1;
-                              // Show first page, last page, current page, and pages around current
                               if (
                                 pageNum === 1 ||
                                 pageNum === totalPages ||
@@ -323,7 +427,6 @@ const MySensorsPage = () => {
                   </>
                 )}
 
-                {/* Empty State */}
                 {!readingsLoading && !error && readings.length === 0 && (
                   <div className="p-12 text-center">
                     <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -341,6 +444,41 @@ const MySensorsPage = () => {
 
 const ReadingRow = ({ reading }) => {
   const hasBlockchainProof = reading.tx_signature && reading.tx_signature.trim() !== '';
+  
+  const getStatusDisplay = () => {
+    if (!hasBlockchainProof) {
+      return {
+        className: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        icon: Shield,
+        text: 'Pending'
+      };
+    }
+    
+    if (reading.verified === undefined) {
+      return {
+        className: 'bg-blue-50 text-blue-700 border border-blue-200',
+        icon: Shield,
+        text: 'On Chain'
+      };
+    }
+    
+    if (reading.verified === true) {
+      return {
+        className: 'bg-green-50 text-green-700 border border-green-200',
+        icon: CheckCircle,
+        text: 'Verified'
+      };
+    }
+    
+    return {
+      className: 'bg-red-50 text-red-700 border border-red-200',
+      icon: XCircle,
+      text: 'Invalid'
+    };
+  };
+  
+  const status = getStatusDisplay();
+  const StatusIcon = status.icon;
   
   return (
     <tr className="hover:bg-slate-50 transition-colors">
@@ -368,16 +506,16 @@ const ReadingRow = ({ reading }) => {
             href={`https://explorer.solana.com/tx/${reading.tx_signature}?cluster=devnet`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg hover:opacity-80 transition-all text-sm font-medium ${status.className}`}
           >
-            <CheckCircle className="w-4 h-4" />
-            Verified
+            <StatusIcon className="w-4 h-4" />
+            {status.text}
             <ExternalLink className="w-3 h-3" />
           </a>
         ) : (
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-sm">
-            <Shield className="w-4 h-4" />
-            Pending
+          <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${status.className}`}>
+            <StatusIcon className="w-4 h-4" />
+            {status.text}
           </span>
         )}
       </td>
