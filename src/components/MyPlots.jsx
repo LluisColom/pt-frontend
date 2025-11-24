@@ -369,7 +369,7 @@ const PollutionPlotsDashboard = () => {
                       dataKey="co2" 
                       stroke="#3b82f6" 
                       strokeWidth={2}
-                      dot={{ fill: '#3b82f6', r: 3 }}
+                      dot={false}
                       name="CO₂"
                       activeDot={{ r: 5 }}
                     />
@@ -411,7 +411,7 @@ const PollutionPlotsDashboard = () => {
                       dataKey="temperature" 
                       stroke="#f97316" 
                       strokeWidth={2}
-                      dot={{ fill: '#f97316', r: 3 }}
+                      dot={false}
                       name="Temperature"
                       activeDot={{ r: 5 }}
                     />
