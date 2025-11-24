@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
-import PollutionPlotsDashboard from './components/PollutionPlotsDashboard';
+import PollutionPlotsDashboard from './components/MyPlots';
 import MySensorsPage from './components/MySensors';
 import { BarChart3, Activity, LogOut } from 'lucide-react';
 
