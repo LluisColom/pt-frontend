@@ -1,24 +1,24 @@
-import React, { useState } from 'react';
-import { User, Lock, AlertCircle, LogIn } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { User, Lock, AlertCircle, LogIn } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const LoginPage = ({ onSwitchToRegister }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/users/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3000/users/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
       });
@@ -28,11 +28,13 @@ const LoginPage = ({ onSwitchToRegister }) => {
       if (response.ok) {
         login(data.body.token, data.body.username, data.body.role);
       } else {
-        setError(data.message || 'Login failed. Please check your credentials.');
+        setError(
+          data.message || "Login failed. Please check your credentials.",
+        );
       }
     } catch (err) {
-      setError('Network error. Please check your connection.');
-      console.error('Login error:', err);
+      setError("Network error. Please check your connection.");
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -45,8 +47,12 @@ const LoginPage = ({ onSwitchToRegister }) => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <Lock className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to access your pollution monitoring dashboard</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-gray-600">
+            Sign in to access your pollution monitoring dashboard
+          </p>
         </div>
 
         {error && (
@@ -70,7 +76,7 @@ const LoginPage = ({ onSwitchToRegister }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
+                onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your username"
                 disabled={loading}
@@ -88,7 +94,7 @@ const LoginPage = ({ onSwitchToRegister }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
+                onKeyPress={(e) => e.key === "Enter" && handleSubmit(e)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
                 disabled={loading}
@@ -117,7 +123,7 @@ const LoginPage = ({ onSwitchToRegister }) => {
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <button
               onClick={onSwitchToRegister}
               className="text-blue-600 font-semibold hover:underline"

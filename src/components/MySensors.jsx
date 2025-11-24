@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Loader, AlertCircle, ExternalLink, Shield, CheckCircle, XCircle, MapPin, Calendar, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import {
+  Loader,
+  AlertCircle,
+  ExternalLink,
+  Shield,
+  CheckCircle,
+  XCircle,
+  MapPin,
+  Calendar,
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const MySensorsPage = () => {
   const { token, logout } = useAuth();
@@ -11,7 +23,7 @@ const MySensorsPage = () => {
   const [readingsLoading, setReadingsLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const readingsPerPage = 10;
@@ -23,9 +35,9 @@ const MySensorsPage = () => {
       setError(null);
 
       try {
-        const response = await fetch('http://localhost:3000/sensors', {
+        const response = await fetch("http://localhost:3000/sensors", {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
 
@@ -40,16 +52,18 @@ const MySensorsPage = () => {
             break;
 
           case 401:
-            setError('Session expired. Please log in again.');
+            setError("Session expired. Please log in again.");
             setTimeout(() => logout(), 2000);
             break;
 
           case 500:
-            setError(data.error_msg || 'Server error. Please try again later.');
+            setError(data.error_msg || "Server error. Please try again later.");
             break;
 
           default:
-            setError(`Error: ${response.status} - ${data.error_msg || 'Unknown error'}`);
+            setError(
+              `Error: ${response.status} - ${data.error_msg || "Unknown error"}`,
+            );
         }
       } catch (err) {
         setError(err.message);
@@ -74,11 +88,14 @@ const MySensorsPage = () => {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3000/sensors/${sensorId}/readings?range=30d`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
+      const response = await fetch(
+        `http://localhost:3000/sensors/${sensorId}/readings?range=30d`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = await response.json();
 
@@ -88,24 +105,29 @@ const MySensorsPage = () => {
           break;
 
         case 401:
-          setError('Session expired. Please log in again.');
+          setError("Session expired. Please log in again.");
           setTimeout(() => logout(), 2000);
           break;
 
         case 403:
-          setError(data.error_msg || 'You do not have permission to access this resource');
+          setError(
+            data.error_msg ||
+              "You do not have permission to access this resource",
+          );
           break;
 
         case 409:
-          setError(data.error_msg || 'Resource already exists');
+          setError(data.error_msg || "Resource already exists");
           break;
 
         case 500:
-          setError(data.error_msg || 'Server error. Please try again later.');
+          setError(data.error_msg || "Server error. Please try again later.");
           break;
 
         default:
-          setError(`Error: ${response.status} - ${data.error_msg || 'Unknown error'}`);
+          setError(
+            `Error: ${response.status} - ${data.error_msg || "Unknown error"}`,
+          );
       }
     } catch (err) {
       setError(err.message);
@@ -119,118 +141,128 @@ const MySensorsPage = () => {
     setError(null);
 
     // Reset verification status for current page to "On Chain" (undefined)
-    setSensorReadings(prevReadings => 
-    prevReadings.map(r => {
-      const isOnCurrentPage = currentReadings.some(cr => cr.id === r.id);
-      return isOnCurrentPage && r.tx_signature 
-        ? { ...r, verified: undefined } // Reset to "On Chain"
-        : r;
-    })
-  );
-  
-  // Small delay to show the reset
-  await new Promise(resolve => setTimeout(resolve, 100));
-    
+    setSensorReadings((prevReadings) =>
+      prevReadings.map((r) => {
+        const isOnCurrentPage = currentReadings.some((cr) => cr.id === r.id);
+        return isOnCurrentPage && r.tx_signature
+          ? { ...r, verified: undefined } // Reset to "On Chain"
+          : r;
+      }),
+    );
+
+    // Small delay to show the reset
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     try {
       // Only verify readings on the CURRENT PAGE
       for (const reading of currentReadings) {
         if (!reading.tx_signature) continue;
-        
+
         try {
-          const response = await fetch(`http://localhost:3000/verify/${reading.id}`, {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
-          
+          const response = await fetch(
+            `http://localhost:3000/verify/${reading.id}`,
+            {
+              method: "GET",
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+
           const data = await response.json();
 
           switch (response.status) {
             case 200:
-              setSensorReadings(prevReadings => 
-                prevReadings.map(r => 
-                  r.id === reading.id 
+              setSensorReadings((prevReadings) =>
+                prevReadings.map((r) =>
+                  r.id === reading.id
                     ? { ...r, verified: data.body.verification }
-                    : r
-                )
+                    : r,
+                ),
               );
               break;
 
             case 401:
-              setError('Session expired. Please log in again.');
+              setError("Session expired. Please log in again.");
               setTimeout(() => logout(), 2000);
               return; // Stop verification
 
             case 404:
               console.warn(`Reading ${reading.id} not found`);
-              setSensorReadings(prevReadings => 
-                prevReadings.map(r => 
-                  r.id === reading.id ? { ...r, verified: false } : r
-                )
+              setSensorReadings((prevReadings) =>
+                prevReadings.map((r) =>
+                  r.id === reading.id ? { ...r, verified: false } : r,
+                ),
               );
               break;
 
             case 500:
               console.error(`Server error verifying reading ${reading.id}`);
-              setSensorReadings(prevReadings => 
-                prevReadings.map(r => 
-                  r.id === reading.id ? { ...r, verified: false } : r
-                )
+              setSensorReadings((prevReadings) =>
+                prevReadings.map((r) =>
+                  r.id === reading.id ? { ...r, verified: false } : r,
+                ),
               );
               break;
 
             default:
-              console.error(`Unexpected error (${response.status}) verifying reading ${reading.id}`);
-              setSensorReadings(prevReadings => 
-                prevReadings.map(r => 
-                  r.id === reading.id ? { ...r, verified: false } : r
-                )
+              console.error(
+                `Unexpected error (${response.status}) verifying reading ${reading.id}`,
+              );
+              setSensorReadings((prevReadings) =>
+                prevReadings.map((r) =>
+                  r.id === reading.id ? { ...r, verified: false } : r,
+                ),
               );
           }
         } catch (err) {
           console.error(`Verification failed for reading ${reading.id}:`, err);
-          setSensorReadings(prevReadings => 
-            prevReadings.map(r => 
-              r.id === reading.id ? { ...r, verified: false } : r
-            )
+          setSensorReadings((prevReadings) =>
+            prevReadings.map((r) =>
+              r.id === reading.id ? { ...r, verified: false } : r,
+            ),
           );
         }
-        
+
         // Small delay between each request
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
     } catch (err) {
-      setError('Verification failed: ' + err.message);
+      setError("Verification failed: " + err.message);
     } finally {
       setVerifying(false);
     }
-};
+  };
 
   // Pagination logic
   const totalPages = Math.ceil(readings.length / readingsPerPage);
   const indexOfLastReading = currentPage * readingsPerPage;
   const indexOfFirstReading = indexOfLastReading - readingsPerPage;
-  const currentReadings = readings.slice(indexOfFirstReading, indexOfLastReading);
+  const currentReadings = readings.slice(
+    indexOfFirstReading,
+    indexOfLastReading,
+  );
 
   const goToNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const goToPrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const goToPage = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
 
-  const currentSensor = sensors.find(s => s.id === selectedSensor);
+  const currentSensor = sensors.find((s) => s.id === selectedSensor);
 
   if (sensorsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="text-center">
           <Loader className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-spin" />
-          <h3 className="text-xl font-semibold text-slate-800">Loading sensors...</h3>
+          <h3 className="text-xl font-semibold text-slate-800">
+            Loading sensors...
+          </h3>
         </div>
       </div>
     );
@@ -241,8 +273,12 @@ const MySensorsPage = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md text-center">
           <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">No Sensors Found</h2>
-          <p className="text-slate-600">You don't have any sensors registered yet.</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            No Sensors Found
+          </h2>
+          <p className="text-slate-600">
+            You don't have any sensors registered yet.
+          </p>
         </div>
       </div>
     );
@@ -251,14 +287,14 @@ const MySensorsPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
-        
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-slate-800 mb-2">My Sensors</h1>
-          <p className="text-slate-600">View and manage your pollution monitoring sensors</p>
+          <p className="text-slate-600">
+            View and manage your pollution monitoring sensors
+          </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -272,11 +308,13 @@ const MySensorsPage = () => {
                     onClick={() => setSelectedSensor(sensor.id)}
                     className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                       selectedSensor === sensor.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300 bg-white'
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-blue-300 bg-white"
                     }`}
                   >
-                    <div className="font-semibold text-slate-800">{sensor.name}</div>
+                    <div className="font-semibold text-slate-800">
+                      {sensor.name}
+                    </div>
                     <div className="text-sm text-slate-600 flex items-center gap-1 mt-1">
                       <MapPin className="w-3 h-3" />
                       {sensor.location}
@@ -292,8 +330,10 @@ const MySensorsPage = () => {
               <div className="bg-white rounded-lg shadow-md">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold text-slate-800">{currentSensor.name}</h2>
-                    
+                    <h2 className="text-2xl font-bold text-slate-800">
+                      {currentSensor.name}
+                    </h2>
+
                     {readings.length > 0 && (
                       <button
                         onClick={verifyAllReadings}
@@ -314,7 +354,7 @@ const MySensorsPage = () => {
                       </button>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm text-slate-600">
                     <span className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
@@ -372,7 +412,9 @@ const MySensorsPage = () => {
                     {totalPages > 1 && (
                       <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
                         <div className="text-sm text-slate-600">
-                          Showing {indexOfFirstReading + 1}-{Math.min(indexOfLastReading, readings.length)} of {readings.length} readings
+                          Showing {indexOfFirstReading + 1}-
+                          {Math.min(indexOfLastReading, readings.length)} of{" "}
+                          {readings.length} readings
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -382,14 +424,15 @@ const MySensorsPage = () => {
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </button>
-                          
+
                           <div className="flex gap-1">
                             {[...Array(totalPages)].map((_, index) => {
                               const pageNum = index + 1;
                               if (
                                 pageNum === 1 ||
                                 pageNum === totalPages ||
-                                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                (pageNum >= currentPage - 1 &&
+                                  pageNum <= currentPage + 1)
                               ) {
                                 return (
                                   <button
@@ -397,8 +440,8 @@ const MySensorsPage = () => {
                                     onClick={() => goToPage(pageNum)}
                                     className={`px-3 py-1 rounded-lg transition-colors ${
                                       currentPage === pageNum
-                                        ? 'bg-blue-600 text-white'
-                                        : 'border border-gray-300 hover:bg-gray-50'
+                                        ? "bg-blue-600 text-white"
+                                        : "border border-gray-300 hover:bg-gray-50"
                                     }`}
                                   >
                                     {pageNum}
@@ -408,7 +451,11 @@ const MySensorsPage = () => {
                                 pageNum === currentPage - 2 ||
                                 pageNum === currentPage + 2
                               ) {
-                                return <span key={pageNum} className="px-2">...</span>;
+                                return (
+                                  <span key={pageNum} className="px-2">
+                                    ...
+                                  </span>
+                                );
                               }
                               return null;
                             })}
@@ -430,7 +477,9 @@ const MySensorsPage = () => {
                 {!readingsLoading && !error && readings.length === 0 && (
                   <div className="p-12 text-center">
                     <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-slate-600">No readings found for this sensor</p>
+                    <p className="text-slate-600">
+                      No readings found for this sensor
+                    </p>
                   </div>
                 )}
               </div>
@@ -443,43 +492,44 @@ const MySensorsPage = () => {
 };
 
 const ReadingRow = ({ reading }) => {
-  const hasBlockchainProof = reading.tx_signature && reading.tx_signature.trim() !== '';
-  
+  const hasBlockchainProof =
+    reading.tx_signature && reading.tx_signature.trim() !== "";
+
   const getStatusDisplay = () => {
     if (!hasBlockchainProof) {
       return {
-        className: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+        className: "bg-yellow-50 text-yellow-700 border border-yellow-200",
         icon: Shield,
-        text: 'Pending'
+        text: "Pending",
       };
     }
-    
+
     if (reading.verified === undefined) {
       return {
-        className: 'bg-blue-50 text-blue-700 border border-blue-200',
+        className: "bg-blue-50 text-blue-700 border border-blue-200",
         icon: Shield,
-        text: 'On Chain'
+        text: "On Chain",
       };
     }
-    
+
     if (reading.verified === true) {
       return {
-        className: 'bg-green-50 text-green-700 border border-green-200',
+        className: "bg-green-50 text-green-700 border border-green-200",
         icon: CheckCircle,
-        text: 'Verified'
+        text: "Verified",
       };
     }
-    
+
     return {
-      className: 'bg-red-50 text-red-700 border border-red-200',
+      className: "bg-red-50 text-red-700 border border-red-200",
       icon: XCircle,
-      text: 'Invalid'
+      text: "Invalid",
     };
   };
-  
+
   const status = getStatusDisplay();
   const StatusIcon = status.icon;
-  
+
   return (
     <tr className="hover:bg-slate-50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap">
@@ -513,7 +563,9 @@ const ReadingRow = ({ reading }) => {
             <ExternalLink className="w-3 h-3" />
           </a>
         ) : (
-          <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${status.className}`}>
+          <span
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${status.className}`}
+          >
             <StatusIcon className="w-4 h-4" />
             {status.text}
           </span>

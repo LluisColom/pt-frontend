@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import LoginPage from './components/LoginPage';
-import RegisterPage from './components/RegisterPage';
-import PollutionPlotsDashboard from './components/MyPlots';
-import MySensorsPage from './components/MySensors';
-import { BarChart3, Activity, LogOut } from 'lucide-react';
+import React, { useState } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import LoginPage from "./components/LoginPage";
+import RegisterPage from "./components/RegisterPage";
+import PollutionPlotsDashboard from "./components/MyPlots";
+import MySensorsPage from "./components/MySensors";
+import { BarChart3, Activity, LogOut } from "lucide-react";
 
 const AppContent = () => {
   const [showRegister, setShowRegister] = useState(false);
-  const [activePage, setActivePage] = useState('plots'); // 'plots' or 'sensors'
+  const [activePage, setActivePage] = useState("plots"); // 'plots' or 'sensors'
   const { isAuthenticated, loading, logout, user } = useAuth();
 
   if (loading) {
@@ -41,28 +41,30 @@ const AppContent = () => {
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <BarChart3 className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-800">Pollution Monitor</span>
+              <span className="text-xl font-bold text-slate-800">
+                Pollution Monitor
+              </span>
             </div>
 
             {/* Navigation Tabs */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setActivePage('plots')}
+                onClick={() => setActivePage("plots")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  activePage === 'plots'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-slate-600 hover:bg-slate-100'
+                  activePage === "plots"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 <BarChart3 className="w-4 h-4" />
                 My Plots
               </button>
               <button
-                onClick={() => setActivePage('sensors')}
+                onClick={() => setActivePage("sensors")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  activePage === 'sensors'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-slate-600 hover:bg-slate-100'
+                  activePage === "sensors"
+                    ? "bg-blue-100 text-blue-700"
+                    : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
                 <Activity className="w-4 h-4" />
@@ -89,7 +91,7 @@ const AppContent = () => {
 
       {/* Page Content */}
       <div>
-        {activePage === 'plots' ? (
+        {activePage === "plots" ? (
           <PollutionPlotsDashboard />
         ) : (
           <MySensorsPage />

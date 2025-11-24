@@ -1,41 +1,41 @@
-import React, { useState } from 'react';
-import { User, Lock, AlertCircle, CheckCircle, UserPlus } from 'lucide-react';
+import React, { useState } from "react";
+import { User, Lock, AlertCircle, CheckCircle, UserPlus } from "lucide-react";
 
 const RegisterPage = ({ onSwitchToLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    setError('');
+    setError("");
     setSuccess(false);
 
     // Validation
     if (username.length < 3) {
-      setError('Username must be at least 3 characters long');
+      setError("Username must be at least 3 characters long");
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError("Password must be at least 8 characters long");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/users/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:3000/users/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
       });
@@ -53,16 +53,17 @@ const RegisterPage = ({ onSwitchToLogin }) => {
 
         case 409:
           // Conflict - username taken
-          setError(data.error_msg || 'Username already taken. Please choose another.');
+          setError(
+            data.error_msg || "Username already taken. Please choose another.",
+          );
           break;
 
         default:
-            setError(data.message || 'Registration failed. Please try again.');
+          setError(data.message || "Registration failed. Please try again.");
       }
-
     } catch (err) {
-      setError('Network error. Please check your connection.');
-      console.error('Registration error:', err);
+      setError("Network error. Please check your connection.");
+      console.error("Registration error:", err);
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,9 @@ const RegisterPage = ({ onSwitchToLogin }) => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
             <UserPlus className="w-8 h-8 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Create Account
+          </h1>
           <p className="text-gray-600">Join the pollution monitoring system</p>
         </div>
 
@@ -93,7 +96,9 @@ const RegisterPage = ({ onSwitchToLogin }) => {
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-green-800 font-semibold">Registration Successful!</p>
+              <p className="text-green-800 font-semibold">
+                Registration Successful!
+              </p>
               <p className="text-green-600 text-sm">Redirecting to login...</p>
             </div>
           </div>
@@ -144,7 +149,7 @@ const RegisterPage = ({ onSwitchToLogin }) => {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                onKeyPress={(e) => e.key === "Enter" && handleSubmit()}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 placeholder="Re-enter your password"
                 disabled={loading || success}
@@ -154,7 +159,9 @@ const RegisterPage = ({ onSwitchToLogin }) => {
 
           <button
             onClick={handleSubmit}
-            disabled={loading || success || !username || !password || !confirmPassword}
+            disabled={
+              loading || success || !username || !password || !confirmPassword
+            }
             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
@@ -178,7 +185,7 @@ const RegisterPage = ({ onSwitchToLogin }) => {
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <button
               onClick={onSwitchToLogin}
               className="text-green-600 font-semibold hover:underline"
