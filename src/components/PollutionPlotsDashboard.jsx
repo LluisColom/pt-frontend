@@ -4,7 +4,7 @@ import { Thermometer, Wind, Calendar, RefreshCw, AlertCircle, CheckCircle, Trend
 import { useAuth } from '../contexts/AuthContext';
 
 const PollutionPlotsDashboard = () => {
-  const { user, logout, token } = useAuth();
+  const { logout, token } = useAuth();
   const [selectedSensor, setSelectedSensor] = useState(null);
   const [sensors, setSensors] = useState([]); // ← Start empty
   const [sensorsLoading, setSensorsLoading] = useState(true);
@@ -216,21 +216,10 @@ const PollutionPlotsDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header with Logout */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">My Plots</h1>
-            <p className="text-slate-600">
-              Welcome, <span className="font-semibold">{user?.username}</span> - Monitor pollution levels from your sensors
-            </p>
-          </div>
-          <button
-            onClick={logout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">My Plots</h1>
+          <p className="text-slate-600">Monitor pollution levels from your sensors</p>
         </div>
 
         {/* Controls */}
