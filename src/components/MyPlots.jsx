@@ -42,7 +42,7 @@ const PollutionPlotsDashboard = () => {
 
       try {
         // BACKEND API CALL:
-        const response = await fetch("http://localhost:3000/sensors", {
+        const response = await fetch("https://localhost:3000/sensors", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -103,7 +103,7 @@ const PollutionPlotsDashboard = () => {
     try {
       // BACKEND API CALL:
       const response = await fetch(
-        `http://localhost:3000/sensors/${sensorId}/readings?range=${timeRange}`,
+        `https://localhost:3000/sensors/${sensorId}/readings?range=${timeRange}`,
         {
           headers: {
             "Content-Type": "application/json",

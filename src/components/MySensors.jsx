@@ -35,7 +35,7 @@ const MySensorsPage = () => {
       setError(null);
 
       try {
-        const response = await fetch("http://localhost:3000/sensors", {
+        const response = await fetch("https://localhost:3000/sensors", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -89,7 +89,7 @@ const MySensorsPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/sensors/${sensorId}/readings?range=30d`,
+        `https://localhost:3000/sensors/${sensorId}/readings?range=30d`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -160,7 +160,7 @@ const MySensorsPage = () => {
 
         try {
           const response = await fetch(
-            `http://localhost:3000/verify/${reading.id}`,
+            `https://localhost:3000/verify/${reading.id}`,
             {
               method: "GET",
               headers: { Authorization: `Bearer ${token}` },
